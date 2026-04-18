@@ -1,0 +1,22 @@
+{
+    "name": "Alex & Rainara Wrapped",
+    "short_name": "A&R Wrapped",
+    "description": "Retrospectiva da conversa — 2024-2026",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#0A0A0F",
+    "theme_color": "#9B59B6",
+    "icons": [
+        {
+            "src": "Image/perfil/perfil_alex.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg"
+        },
+        {
+            "src": "Image/perfil/perfil_rai.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg"
+        }
+    ]
+}

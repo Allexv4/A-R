@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Retrospectiva animada de 2 anos de conversas entre Alex e Rainara.">
+    <meta name="theme-color" content="#0A0A0F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Alex & Rainara — Wrapped</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --alex: #5B8DEF;
+            --rai: #FFD700;
+            --accent: #1DB954;
+            --pink: #E91E8C;
+            --text: #FFFFFF;
+            --text-dim: rgba(255, 255, 255, 0.6);
+            --bg: #0A0A0F;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Montserrat', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* ===== STORY CONTAINER ===== */
+        #app {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .story {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 28px 90px;
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            z-index: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            text-align: center;
+        }
+
+        .story.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 2;
+        }
+
+        .story.exit {
+            opacity: 0;
+            transform: scale(1.08);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        /* ===== BACKGROUNDS ===== */
+        .story-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            z-index: -2;
+        }
+
+        .story-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+        }
+
+        /* ===== PROGRESS DOTS ===== */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 3px;
+            padding: 12px 12px 0;
+            z-index: 100;
+        }
+
+        .prog-seg {
+            flex: 1;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .prog-seg .prog-fill {
+            width: 0;
+            height: 100%;
+            background: white;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .prog-seg.done .prog-fill {
+            width: 100%;
+        }
+
+        .prog-seg.current .prog-fill {
+            width: 100%;
+            background: var(--rai);
+        }
+
+        /* ===== TAP ZONES ===== */
+        .tap-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            z-index: 50;
+            cursor: pointer;
+        }
+
+        .tap-prev {
+            left: 0;
+            width: 30%;
+        }
+
+        .tap-next {
+            right: 0;
+            width: 70%;
+        }
+
+        /* ===== TYPOGRAPHY ===== */
+        .t-huge {
+            font-size: clamp(2.8rem, 10vw, 4rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        .t-big {
+            font-size: clamp(2rem, 7vw, 3rem);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .t-medium {
+            font-size: clamp(1.4rem, 4.5vw, 2rem);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .t-body {
+            font-size: clamp(0.95rem, 3vw, 1.15rem);
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--text-dim);
+        }
+
+        .t-small {
+            font-size: clamp(0.75rem, 2.2vw, 0.9rem);
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .t-mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .t-gold {
+            color: var(--rai);
+        }
+
+        .t-blue {
+            color: var(--alex);
+        }
+
+        .t-pink {
+            color: var(--pink);
+        }
+
+        .t-green {
+            color: var(--accent);
+        }
+
+        /* ===== AVATARS ===== */
+        .avatar {
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .av-alex {
+            border: 3px solid var(--alex);
+        }
+
+        .av-rai {
+            border: 3px solid var(--rai);
+        }
+
+        .av-sm {
+            width: 48px;
+            height: 48px;
+        }
+
+        .av-md {
+            width: 72px;
+            height: 72px;
+        }
+
+        .av-lg {
+            width: 100px;
+            height: 100px;
+        }
+
+        .av-xl {
+            width: 130px;
+            height: 130px;
+        }
+
+        .av-glow-alex {
+            box-shadow: 0 0 25px rgba(91, 141, 239, 0.5), 0 0 60px rgba(91, 141, 239, 0.2);
+        }
+
+        .av-glow-rai {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.2);
+        }
+
+        /* ===== DECORATIVE CAT ===== */
+        .deco-cat {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 14px;
+            object-fit: cover;
+            opacity: 0.6;
+            animation: float-cat 5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        @keyframes float-cat {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(-3deg);
+            }
+
+            50% {
+                transform: translateY(-12px) rotate(3deg);
+            }
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-start {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, var(--alex), var(--pink));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 30px rgba(91, 141, 239, 0.4);
+            transition: all 0.3s ease;
+            letter-spacing: 0.02em;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px) scale(1.03);
+        }
+
+        .btn-start:active {
+            transform: scale(0.97);
+        }
+
+        .btn-reveal {
+            padding: 14px 40px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-reveal:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--rai);
+        }
+
+        /* ===== STAT CARDS ===== */
+        .stat-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px 10px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-box .stat-val {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            font-weight: 700;
+        }
+
+        .stat-box .stat-lbl {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        /* ===== COMPARISON ANIMATION ===== */
+        .versus-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .versus-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .versus-profile img {
+            transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .versus-profile.winner img {
+            width: 130px !important;
+            height: 130px !important;
+        }
+
+        .versus-profile.loser img {
+            width: 60px !important;
+            height: 60px !important;
+            opacity: 0.6;
+        }
+
+        .vs-badge {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ===== TOP 1 ===== */
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 28px;
+            background: linear-gradient(135deg, var(--rai), #FF8C00);
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #000;
+        }
+
+        .other-bars {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 16px;
+        }
+
+        .other-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .other-bar .bar-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            width: 80px;
+            text-align: right;
+        }
+
+        .other-bar .bar-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .other-bar .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 0;
+        }
+
+        /* ===== REACTION BUBBLES ===== */
+        .reaction-float {
+            position: absolute;
+            font-size: 2.5rem;
+            animation: reaction-pop 3s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes reaction-pop {
+            0% {
+                transform: scale(0) translateY(0);
+                opacity: 0;
+            }
+
+            15% {
+                transform: scale(1.3) translateY(-20px);
+                opacity: 1;
+            }
+
+            30% {
+                transform: scale(1) translateY(-40px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.6) translateY(-200px);
+                opacity: 0;
+            }
+        }
+
+        /* ===== DELETED MSG ===== */
+        .deleted-msg {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        /* ===== SPECIAL IMAGES ===== */
+        .special-img {
+            width: 160px;
+            height: 160px;
+            border-radius: 20px;
+            object-fit: cover;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ===== HOUR CHART ===== */
+        .hour-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            width: 100%;
+            max-width: 360px;
+            height: 120px;
+            margin-top: 16px;
+        }
+
+        .h-bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+            transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+
+        /* ===== DAY CHART ===== */
+        .day-chart {
+            width: 100%;
+            max-width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .day-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .day-row .d-label {
+            width: 36px;
+            font-size: 0.7rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        .day-row .d-track {
+            flex: 1;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .day-row .d-fill {
+            height: 100%;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 0;
+        }
+
+        /* ===== RECORD CARDS ===== */
+        .record-list {
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rec-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 215, 0, 0.12);
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+        }
+
+        .rec-card .rec-icon {
+            font-size: 1.8rem;
+        }
+
+        .rec-card .rec-val {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            color: var(--rai);
+        }
+
+        .rec-card .rec-desc {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* ===== WORD REVEAL ===== */
+        .word-slot {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 340px;
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .word-slot.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .word-slot .w-rank {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--rai);
+            min-width: 30px;
+        }
+
+        .word-slot .w-word {
+            font-size: 1.2rem;
+            font-weight: 800;
+            flex: 1;
+        }
+
+        .word-slot .w-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* ===== WORD PILLS GRID ===== */
+        .word-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 360px;
+            margin-top: 16px;
+        }
+
+        .w-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s ease;
+        }
+
+        .w-pill.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ===== PROFILE TRAITS ===== */
+        .trait-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 340px;
+        }
+
+        .trait {
+            background: rgba(255, 215, 0, 0.06);
+            border: 1px solid rgba(255, 215, 0, 0.12);
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        .trait .tr-emoji {
+            font-size: 1.6rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .trait .tr-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--rai);
+        }
+
+        .trait .tr-sub {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        .anim {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .anim.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .d1 {
+            transition-delay: 0.1s;
+        }
+
+        .d2 {
+            transition-delay: 0.2s;
+        }
+
+        .d3 {
+            transition-delay: 0.3s;
+        }
+
+        .d4 {
+            transition-delay: 0.4s;
+        }
+
+        .d5 {
+            transition-delay: 0.5s;
+        }
+
+        .d6 {
+            transition-delay: 0.6s;
+        }
+
+        .d7 {
+            transition-delay: 0.7s;
+        }
+
+        .d8 {
+            transition-delay: 0.8s;
+        }
+
+        .d9 {
+            transition-delay: 0.9s;
+        }
+
+        .d10 {
+            transition-delay: 1.0s;
+        }
+
+        .gap-sm {
+            margin-top: 10px;
+        }
+
+        .gap-md {
+            margin-top: 20px;
+        }
+
+        .gap-lg {
+            margin-top: 32px;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: rotate(0);
+            }
+
+            25% {
+                transform: rotate(-3deg);
+            }
+
+            75% {
+                transform: rotate(3deg);
+            }
+        }
+
+        /* ===== BOTTOM NAV ===== */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 24px;
+            background: linear-gradient(to top, rgba(10, 10, 15, 0.95), transparent);
+            z-index: 80;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            width: 24px;
+            border-radius: 4px;
+            background: var(--rai);
+        }
+
+        /* ===== QUESTION ANIMATION ===== */
+        .question-text {
+            font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+            font-weight: 600;
+            line-height: 1.5;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== HIDDEN NUMBER ===== */
+        .hidden-number {
+            filter: blur(30px);
+            transition: filter 1s ease, transform 0.6s ease;
+            cursor: pointer;
+        }
+
+        .hidden-number.revealed {
+            filter: blur(0);
+            transform: scale(1.05);
+        }
+
+        /* ===== SHRINK GROW ANIMATION ===== */
+        @keyframes shrink-grow {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(0.7);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            75% {
+                transform: scale(0.8);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .bounce-anim {
+            animation: shrink-grow 2s ease-in-out;
+        }
+
+        /* ===== INSTALL PROMPT ===== */
+        #install-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            padding: 10px 20px;
+            background: var(--accent);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 200;
+            display: none;
+            box-shadow: 0 4px 20px rgba(29, 185, 84, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Progress segments -->
+    <div id="progress-bar"></div>
+
+    <!-- Tap zones -->
+    <div class="tap-zone tap-prev" onclick="prevStory()"></div>
+    <div class="tap-zone tap-next" onclick="nextStory()"></div>
+
+    <div id="app">
+
+        <!-- ===== STORY 0: COVER ===== -->
+        <div class="story active" data-story="0">
+            <div class="story-bg" style="background-image:url('Image/background/Aesthetic Wallpaper.jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.55)"></div>
+
+            <p class="t-small anim d1 t-mono" style="color:var(--text-dim);">14 de março de 2024</p>
+
+            <div class="gap-md anim d2" style="display:flex; align-items:center; gap:0;">
+                <img src="Image/perfil/perfil_alex.jpg" alt="Alex" class="avatar av-xl av-alex av-glow-alex">
+                <img src="Image/perfil/perfil_rai.jpg" alt="Rainara" class="avatar av-xl av-rai av-glow-rai"
+                    style="margin-left:-25px;">
+            </div>
+
+            <button class="btn-start anim d4 gap-lg" onclick="nextStory()">
+                Iniciar ✦
+            </button>
+
+            <img src="Image/cat_flower.jpg" class="deco-cat" style="top:15%; right:12%;" alt="">
+            <img src="Image/cat_flower.jpg" class="deco-cat" style="bottom:18%; left:8%; animation-delay:1.5s;" alt="">
+        </div>
+
+        <!-- ===== STORY 1: THE BEGINNING ===== -->
+        <div class="story" data-story="1">
+            <div class="story-bg" style="background-image:url('Image/background/wallpaper.jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.65)"></div>
+
+            <p class="t-small anim d1">Tudo começou em</p>
+            <h2 class="t-big anim d2 gap-sm">14 de Março<br><span class="t-gold">de 2024</span></h2>
+
+            <div class="anim d4 gap-md"
+                style="font-family:'Space Mono',monospace; font-size:clamp(2.5rem,8vw,3.5rem); font-weight:700; color:var(--rai);"
+                data-countup="761" data-dur="2000">0</div>
+            <p class="t-body anim d5">dias se passaram desde então</p>
+
+            <p class="question-text anim d6 gap-lg t-gold" style="animation-delay:1.2s;">
+                Quanto já conversamos<br>nesse tempo todo? 🤔
+            </p>
+
+            <img src="Image/snoopy.jpg" class="deco-cat" style="bottom:12%; right:8%; width:55px; height:55px;" alt="">
+        </div>
+
+        <!-- ===== STORY 2: TOTAL COUNT ===== -->
+        <div class="story" data-story="2">
+            <div class="story-bg" style="background-image:url('Image/background/download (51).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.6)"></div>
+
+            <p class="t-small anim d1">Em 761 dias, nós trocamos...</p>
+
+            <div class="gap-md anim d2"
+                style="position:relative; display:flex; flex-direction:column; align-items:center;">
+                <div class="t-huge t-mono t-gold" style="font-size:clamp(3.5rem,14vw,5rem);" data-countup="75298"
+                    data-dur="2500">0</div>
+                <p class="t-medium gap-sm">mensagens</p>
+            </div>
+
+            <p class="question-text anim d4 gap-lg">
+                Mas quem falou mais?<br>Vamos descobrir... 👀
+            </p>
+
+            <img src="Image/cat_flower.jpg" class="deco-cat" style="top:10%; left:8%;" alt="">
+        </div>
+
+        <!-- ===== STORY 3: COMPARISON ===== -->
+        <div class="story" data-story="3">
+            <div class="story-bg" style="background-image:url('Image/background/download (52).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.65)"></div>
+
+            <p class="t-small anim d1">Quem mandou mais mensagens?</p>
+
+            <div class="versus-container anim d2 gap-sm" id="versus-box">
+                <div class="versus-profile" id="vp-alex">
+                    <img src="Image/perfil/perfil_alex.jpg" alt="Alex"
+                        class="avatar av-lg av-alex av-glow-alex bounce-anim">
+                    <span class="t-mono" style="font-size:0.9rem; font-weight:700;">Alex</span>
+                    <span class="t-mono t-blue" style="font-size:clamp(1.3rem,4vw,2rem); font-weight:700;"
+                        data-countup="36948" data-dur="2000">0</span>
+                    <span class="t-small" style="font-size:0.65rem;">49%</span>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="versus-profile" id="vp-rai">
+                    <img src="Image/perfil/perfil_rai.jpg" alt="Rainara"
+                        class="avatar av-lg av-rai av-glow-rai bounce-anim" style="animation-delay:0.5s;">
+                    <span class="t-mono" style="font-size:0.9rem; font-weight:700;">Rainara</span>
+                    <span class="t-mono t-gold" style="font-size:clamp(1.3rem,4vw,2rem); font-weight:700;"
+                        data-countup="38337" data-dur="2000">0</span>
+                    <span class="t-small" style="font-size:0.65rem;">51%</span>
+                </div>
+            </div>
+
+            <p class="t-body anim d4 gap-sm" id="winner-text" style="opacity:0;max-width:300px;">
+                🏆 <strong class="t-gold">Você</strong> é a rainha da conversa!<br>Mas foi quase um empate.
+            </p>
+        </div>
+
+        <!-- ===== STORY 4: TOP 1 INSTAGRAM ===== -->
+        <div class="story" data-story="4">
+            <div class="story-bg" style="background-image:url('Image/background/download (53).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.7)"></div>
+
+            <p class="t-small anim d1">No Meu instagram</p>
+            <h2 class="t-big anim d2 gap-sm">Você é a</h2>
+
+            <div class="anim d3 gap-sm">
+                <div class="rank-badge" style="animation: pulse 2s ease-in-out infinite;">
+                    Nº1 EM TUDO
+                </div>
+            </div>
+
+            <div class="anim d4 gap-md" style="display:flex;align-items:center;gap:12px;">
+                <img src="Image/perfil/perfil_rai.jpg" class="avatar av-md av-rai av-glow-rai" alt="">
+                <div style="text-align:left;">
+                    <div class="t-mono t-gold" style="font-size:1.5rem; font-weight:700;">38.337</div>
+                    <div class="t-small">mensagens enviadas</div>
+                </div>
+            </div>
+
+            <div class="other-bars anim d5 gap-md">
+                <div class="other-bar">
+                    <span class="bar-label">Pessoa 2</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" data-w="8%" style="background:rgba(255,255,255,0.2);"></div>
+                    </div>
+                </div>
+                <div class="other-bar">
+                    <span class="bar-label">Pessoa 3</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" data-w="5%" style="background:rgba(255,255,255,0.15);"></div>
+                    </div>
+                </div>
+                <div class="other-bar">
+                    <span class="bar-label">Pessoa 4</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" data-w="3%" style="background:rgba(255,255,255,0.1);"></div>
+                    </div>
+                </div>
+                <div class="other-bar">
+                    <span class="bar-label">Pessoa 5</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" data-w="2%" style="background:rgba(255,255,255,0.08);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="t-body anim d6 gap-sm" style="max-width:300px;font-size:0.85rem;">
+                Nem <strong>todos os outros somados</strong> chegam perto de você. 💛
+            </p>
+        </div>
+
+        <!-- ===== STORY 5: TIME STATS ===== -->
+        <div class="story" data-story="5">
+            <div class="story-bg" style="background-image:url('Image/background/Aesthetic Wallpaper.jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.6)"></div>
+
+            <p class="t-small anim d1">O tempo que dedicamos</p>
+            <h2 class="t-big anim d2 gap-sm t-gold">⏰</h2>
+
+            <div class="stat-row anim d3 gap-md">
+                <div class="stat-box">
+                    <div class="stat-val t-blue" data-countup="778" data-dur="1500">0</div>
+                    <div class="stat-lbl">Horas ativas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val t-gold" data-countup="422" data-dur="1500">0</div>
+                    <div class="stat-lbl">Dias de conversa</div>
+                </div>
+            </div>
+
+            <div class="stat-row anim d4 gap-sm">
+                <div class="stat-box">
+                    <div class="stat-val t-pink" style="font-size:1.3rem;">32,4</div>
+                    <div class="stat-lbl">Dias corridos falando</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val t-green" style="font-size:1.3rem;">55,5%</div>
+                    <div class="stat-lbl">Do tempo conversando</div>
+                </div>
+            </div>
+
+            <p class="t-body anim d5 gap-md" style="max-width:300px;font-style:italic;">
+                "Mais de 32 dias inteiros<br>dedicados um ao outro."
+            </p>
+        </div>
+
+        <!-- ===== STORY 6: MEDIA ===== -->
+        <div class="story" data-story="6">
+            <div class="story-bg" style="background-image:url('Image/background/download (53).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.7)"></div>
+
+            <p class="t-small anim d1">Além das palavras</p>
+            <h2 class="t-medium anim d2">Fotos, áudios e mais</h2>
+
+            <div class="stat-row anim d3 gap-md" style="max-width:340px;">
+                <div class="stat-box">
+                    <div style="font-size:2rem;">📷</div>
+                    <div class="stat-val t-blue" data-countup="235" data-dur="1200">0</div>
+                    <div class="stat-lbl">Fotos</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size:2rem;">🎤</div>
+                    <div class="stat-val t-pink" data-countup="680" data-dur="1200">0</div>
+                    <div class="stat-lbl">Áudios</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size:2rem;">🔗</div>
+                    <div class="stat-val t-gold" data-countup="520" data-dur="1200">0</div>
+                    <div class="stat-lbl">Links</div>
+                </div>
+            </div>
+
+            <div class="stat-row anim d4 gap-sm" style="max-width:340px;">
+                <div class="stat-box">
+                    <div style="font-size:2rem;">🎬</div>
+                    <div class="stat-val" style="color:var(--accent);" data-countup="1789" data-dur="1200">0</div>
+                    <div class="stat-lbl">Reações</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size:2rem;">❤️</div>
+                    <div class="stat-val t-pink" data-countup="1066" data-dur="1200">0</div>
+                    <div class="stat-lbl">Corações</div>
+                </div>
+            </div>
+
+            <p class="t-body anim d5 gap-md" style="font-style:italic;">
+                "Uma galeria inteira<br>construída a dois."
+            </p>
+
+            <img src="Image/cat_flower.jpg" class="deco-cat" style="bottom:15%; right:10%;" alt="">
+        </div>
+
+        <!-- ===== STORY 7: REACTIONS ===== -->
+        <div class="story" data-story="7">
+            <div class="story-bg" style="background-image:url('Image/background/wallpaper.jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.65)"></div>
+
+            <p class="t-small anim d1">As suas reações...</p>
+            <h2 class="t-big anim d2 gap-sm">💬</h2>
+
+            <div class="anim d3 gap-md" id="reactions-stage"
+                style="width:100%;max-width:360px;height:200px;position:relative;"></div>
+
+            <div class="stat-row anim d4 gap-md" style="max-width:300px;">
+                <div style="text-align:center;flex:1;">
+                    <div style="font-size:2.5rem;">❤️</div>
+                    <div class="t-mono t-pink" style="font-size:1.2rem; font-weight:700;">1.066</div>
+                    <div class="t-small">mais usada</div>
+                </div>
+                <div style="text-align:center;flex:1;">
+                    <div style="font-size:2.5rem;">😂</div>
+                    <div class="t-mono t-gold" style="font-size:1.2rem; font-weight:700;">723</div>
+                    <div class="t-small">segunda</div>
+                </div>
+            </div>
+
+            <p class="t-body anim d5 gap-sm" style="font-size:0.85rem;">
+                Você reagiu <strong class="t-gold">83%</strong> das vezes.<br>
+                Eu? Só <strong class="t-blue">17%</strong>. 😏
+            </p>
+        </div>
+
+        <!-- ===== STORY 8: DELETED MESSAGES ===== -->
+        <div class="story" data-story="8">
+            <div class="story-bg" style="background-image:url('Image/background/download (54).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.75)"></div>
+
+            <p class="t-small anim d1">Hmm... 🤔</p>
+            <h2 class="t-big anim d2 gap-sm">E as mensagens<br><span class="t-pink">apagadas?</span></h2>
+
+            <div class="anim d3 gap-md"
+                style="font-family:'Space Mono',monospace; font-size:clamp(3rem,10vw,4.5rem); font-weight:700; color:var(--pink);"
+                data-countup="850" data-dur="2000">0</div>
+            <p class="t-body anim d3">mensagens apagadas 👀</p>
+
+            <div class="anim d4 gap-md" style="display:flex;flex-direction:column;gap:8px;max-width:320px;">
+                <div class="deleted-msg">🚫 <em>Essa mensagem foi apagada</em></div>
+                <div class="deleted-msg" style="animation-delay:0.3s;">🚫 <em>Essa mensagem foi apagada</em></div>
+                <div class="deleted-msg" style="animation-delay:0.6s;">🚫 <em>Essa mensagem foi apagada</em></div>
+            </div>
+
+            <p class="t-body anim d6 gap-md" style="font-style:italic;max-width:300px;">
+                "O que será que tinham<br>essas mensagens... 🤷"
+            </p>
+
+            <img src="Image/snoopy_flower.jpg" class="deco-cat" style="top:12%; right:8%; width:55px; height:55px;"
+                alt="">
+        </div>
+
+        <!-- ===== STORY 9: BOA NOITE & BEIJOS ===== -->
+        <div class="story" data-story="9">
+            <div class="story-bg" style="background-image:url('Image/background/Aesthetic Wallpaper.jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.55)"></div>
+
+            <p class="t-small anim d1">Os nossos rituais</p>
+            <h2 class="t-medium anim d2">🌙 Boa noite & 💋 Beijos</h2>
+
+            <div class="anim d3 gap-md" style="display:flex;gap:24px;align-items:flex-start;">
+                <div style="text-align:center;">
+                    <img src="Image/boanoite.jpg" class="special-img" alt="Boa Noite" style="width:140px;height:140px;">
+                    <div class="t-mono t-gold gap-sm" style="font-size:clamp(1.8rem,6vw,2.5rem); font-weight:700;"
+                        data-countup="227" data-dur="1500">0</div>
+                    <p class="t-small">"boa noite"</p>
+                </div>
+                <div style="text-align:center;">
+                    <img src="Image/beijo.jpg" class="special-img" alt="Beijo" style="width:140px;height:140px;">
+                    <div class="t-mono t-pink gap-sm" style="font-size:clamp(1.8rem,6vw,2.5rem); font-weight:700;">73
+                    </div>
+                    <p class="t-small">"beijos"</p>
+                </div>
+            </div>
+
+            <p class="t-body anim d5 gap-md" style="max-width:320px;">
+                Eu disse "beijos" <strong class="t-blue">31x</strong>,<br>
+                Você só <strong class="t-gold">2x</strong>. 😏
+            </p>
+
+            <img src="Image/coracao.jpg" class="deco-cat" style="top:10%; right:6%; width:50px; height:50px;" alt="">
+        </div>
+
+        <!-- ===== STORY 10: HOURS ===== -->
+        <div class="story" data-story="10">
+            <div class="story-bg" style="background-image:url('Image/background/download (52).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.65)"></div>
+
+            <p class="t-small anim d1">Quando nós conversamos?</p>
+            <h2 class="t-medium anim d2">Somos corujas da<br><span class="t-gold">madrugada</span></h2>
+
+            <p class="t-body anim d3 gap-sm">Hora mais ativa: <strong class="t-gold">01h da manhã</strong></p>
+
+            <div class="hour-chart anim d4 gap-sm" id="hour-chart"></div>
+            <div class="anim d4"
+                style="display:flex;width:100%;max-width:360px;justify-content:space-between;padding:0 2px;">
+                <span class="t-small" style="font-size:0.55rem;">00h</span>
+                <span class="t-small" style="font-size:0.55rem;">06h</span>
+                <span class="t-small" style="font-size:0.55rem;">12h</span>
+                <span class="t-small" style="font-size:0.55rem;">18h</span>
+                <span class="t-small" style="font-size:0.55rem;">23h</span>
+            </div>
+
+            <p class="t-body anim d5 gap-md" style="font-style:italic;">
+                "Quando o mundo dorme,<br>nós acordamos." 🌙
+            </p>
+
+            <img src="Image/cat_flower.jpg" class="deco-cat" style="bottom:14%; left:8%;" alt="">
+        </div>
+
+        <!-- ===== STORY 11: DAYS ===== -->
+        <div class="story" data-story="11">
+            <div class="story-bg" style="background-image:url('Image/background/download (51).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.6)"></div>
+
+            <p class="t-small anim d1">Dias da semana</p>
+            <h2 class="t-medium anim d2">O sábado é rei 👑</h2>
+
+            <div class="day-chart anim d3 gap-md" id="day-chart"></div>
+
+            <p class="t-body anim d5 gap-md" style="font-style:italic;">
+                "Segunda é preguiça.<br>Sábado é lazer." 💛
+            </p>
+        </div>
+
+        <!-- ===== STORY 12: RECORDS ===== -->
+        <div class="story" data-story="12">
+            <div class="story-bg" style="background-image:url('Image/background/download (53).jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.7)"></div>
+
+            <p class="t-small anim d1">Os maiores feitos</p>
+            <h2 class="t-medium anim d2 t-gold">🏆 Recordes</h2>
+
+            <div class="record-list anim d3 gap-md">
+                <div class="rec-card">
+                    <div class="rec-icon">🔥</div>
+                    <div>
+                        <div class="rec-val">1.686 msgs</div>
+                        <div class="rec-desc">Dia mais intenso — 31/03/2024</div>
+                    </div>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-icon">⏱️</div>
+                    <div>
+                        <div class="rec-val">8,8 horas</div>
+                        <div class="rec-desc">Sessão mais longa — 18h04 às 02h53</div>
+                    </div>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-icon">📅</div>
+                    <div>
+                        <div class="rec-val">34 dias seguidos</div>
+                        <div class="rec-desc">Maior sequência — 11/02 a 16/03/2026</div>
+                    </div>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-icon">😶</div>
+                    <div>
+                        <div class="rec-val">18 dias</div>
+                        <div class="rec-desc">Maior silêncio — agosto/2025</div>
+                    </div>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-icon">💝</div>
+                    <div>
+                        <div class="rec-val">1.196 msgs</div>
+                        <div class="rec-desc">Dia dos Namorados — 14/02/2026</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STORY 13: WORDS SUSPENSE ===== -->
+        <div class="story" data-story="13">
+            <div class="story-bg" style="background-image:url('Image/background/wallpaper.jpg')"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.7)"></div>
+
+            <p class="t-small anim d1">As palavras mais usadas</p>
+            <h2 class="t-medium anim d2">Top 5 ✨</h2>
+
+            <div class="gap-md" style="display:flex;flex-direction:column;gap:10px;width:100%;align-items:center;"
+                id="word-reveal">
+                <div class="word-slot" data-rank="5">
+                    <span class="w-rank">#5</span>
+                    <span class="w-word">falar</span>
+                    <span class="w-count t-mono">479x</span>
+                </div>
+                <div class="word-slot" data-rank="4">
+                    <span class="w-rank">#4</span>
+                    <span class="w-word">vídeo</span>
+                    <span class="w-count t-mono">520x</span>
+                </div>
+                <div class="word-slot" data-rank="3">
+                    <span class="w-rank">#3</span>
+                    <span class="w-word t-pink">rainara</span>
+                    <span class="w-count t-mono">576x</span>
+                </div>
+                <div class="word-slot" data-rank="2">
+                    <span class="w-rank">#2</span>
+                    <span class="w-word t-blue">fazer</span>
+                    <span class="w-count t-mono">663x</span>
+                </div>
+                <div class="word-slot" data-rank="1" style="border:1px solid var(--rai);">
+                    <span class="w-rank" style="font-size:1.6rem;">🥇</span>
+                    <span class="w-word t-gold" style="font-size:1.4rem;">tenho</span>
+                    <span class="w-count t-mono">891x</span>
+                </div>
+            </div>
+
+            <div class="word-grid gap-md" id="word-grid-extra"></div>
+        </div>
+
+        <!-- ===== STORY 14: FINALE ===== -->
+        <div class="story" data-story="14">
+            <div class="story-bg"
+                style="background-image:url('Image/ararinha.jpg'); filter: blur(5px) brightness(0.6);"></div>
+            <div class="story-overlay" style="background:rgba(0,0,0,0.65)"></div>
+
+            <div class="anim d1 gap-lg"
+                style="display:flex;align-items:center;justify-content:center;gap:16px; margin-top:20vh;">
+                <img src="Image/perfil/perfil_alex.jpg" class="avatar av-xl av-alex av-glow-alex" alt="">
+                <img src="Image/perfil/perfil_rai.jpg" class="avatar av-xl av-rai av-glow-rai"
+                    style="margin-left:-35px;" alt="">
+            </div>
+
+            <p class="t-body anim d2 gap-md" style="font-style:italic;max-width:320px;font-size:1.1rem;">
+                "761 dias. 75 mil mensagens.<br>
+                Algo praticamente impossivel pra duas pessoas que não gostam de falar." 💜
+            </p>
+
+            <p class="t-small anim d3 gap-lg" style="opacity:0.4;">wrapped • 2024-2026</p>
+
+            <img src="Image/cat_flower.jpg" class="deco-cat" style="top:8%; right:6%;" alt="">
+            <img src="Image/snoopy_flower.jpg" class="deco-cat" style="bottom:12%; left:6%; width:55px;height:55px;"
+                alt="">
+
+            <div id="hearts-rain" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:-1;">
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-nav"></div>
+    <button id="install-btn" onclick="installApp()">📲 Instalar App</button>
+
+    <script>
+        // ===== STATE =====
+        let cur = 0;
+        const stories = document.querySelectorAll('.story');
+        const total = stories.length;
+        let transitioning = false;
+
+        // ===== PROGRESS BAR =====
+        const progBar = document.getElementById('progress-bar');
+        for (let i = 0; i < total; i++) {
+            const seg = document.createElement('div');
+            seg.className = 'prog-seg';
+            seg.innerHTML = '<div class="prog-fill"></div>';
+            progBar.appendChild(seg);
+        }
+
+        // ===== BOTTOM NAV DOTS =====
+        const bottomNav = document.getElementById('bottom-nav');
+        for (let i = 0; i < total; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot';
+            bottomNav.appendChild(dot);
+        }
+
+        function updateProgress() {
+            const segs = progBar.querySelectorAll('.prog-seg');
+            segs.forEach((s, i) => {
+                s.classList.remove('done', 'current');
+                if (i < cur) s.classList.add('done');
+                else if (i === cur) s.classList.add('current');
+            });
+            const dots = bottomNav.querySelectorAll('.nav-dot');
+            dots.forEach((d, i) => {
+                d.classList.toggle('active', i === cur);
+            });
+        }
+
+        // ===== NAVIGATION =====
+        function goTo(index) {
+            if (index < 0 || index >= total || transitioning) return;
+            transitioning = true;
+
+            const prev = stories[cur];
+            prev.classList.remove('active');
+            prev.classList.add('exit');
+            setTimeout(() => prev.classList.remove('exit'), 500);
+
+            cur = index;
+            const next = stories[cur];
+
+            setTimeout(() => {
+                next.classList.add('active');
+                triggerAnims(next);
+                triggerCounts(next);
+                triggerSpecial(cur);
+                transitioning = false;
+            }, 150);
+
+            updateProgress();
+        }
+
+        function nextStory() { goTo(cur + 1); }
+        function prevStory() { goTo(cur - 1); }
+
+        // ===== KEYBOARD =====
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextStory(); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); prevStory(); }
+        });
+
+        // ===== SWIPE =====
+        let sx = 0, sy = 0;
+        document.addEventListener('touchstart', e => { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].screenX - sx;
+            const dy = e.changedTouches[0].screenY - sy;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+                if (dx < 0) nextStory(); else prevStory();
+            }
+        }, { passive: true });
+
+        // ===== APPEAR ANIMATIONS =====
+        function triggerAnims(scene) {
+            scene.querySelectorAll('.anim').forEach(el => {
+                el.classList.remove('show');
+                void el.offsetWidth;
+                el.classList.add('show');
+            });
+        }
+
+        // ===== COUNT UP =====
+        function triggerCounts(scene) {
+            scene.querySelectorAll('[data-countup]').forEach(el => {
+                const end = parseInt(el.dataset.countup);
+                const dur = parseInt(el.dataset.dur) || 2000;
+                countUp(el, 0, end, dur);
+            });
+        }
+
+        function countUp(el, start, end, dur) {
+            const t0 = performance.now();
+            function tick(now) {
+                const p = Math.min((now - t0) / dur, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.floor(start + (end - start) * eased).toLocaleString('pt-BR');
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+
+        // ===== SCENE-SPECIFIC =====
+        function triggerSpecial(idx) {
+            switch (idx) {
+                case 3: triggerVersus(); break;
+                case 4: triggerBars(); break;
+                case 7: triggerReactions(); break;
+                case 10: buildHourChart(); break;
+                case 11: buildDayChart(); break;
+                case 13: triggerWordReveal(); break;
+                case 14: startHearts(); break;
+            }
+        }
+
+        // ===== VERSUS =====
+        function triggerVersus() {
+            setTimeout(() => {
+                document.getElementById('vp-rai').classList.add('winner');
+                document.getElementById('vp-alex').classList.add('loser');
+                document.getElementById('winner-text').style.opacity = '1';
+            }, 2500);
+        }
+
+        // ===== TOP 1 BARS =====
+        function triggerBars() {
+            setTimeout(() => {
+                document.querySelectorAll('.other-bar .bar-fill').forEach(b => {
+                    b.style.width = b.dataset.w;
+                });
+            }, 500);
+        }
+
+        // ===== REACTIONS FLOAT =====
+        function triggerReactions() {
+            const stage = document.getElementById('reactions-stage');
+            stage.innerHTML = '';
+            const emojis = ['❤️', '😂', '🔥', '😍', '💀', '👏', '😭', '💜', '✨', '🥺'];
+            let i = 0;
+            const iv = setInterval(() => {
+                if (i >= 20) { clearInterval(iv); return; }
+                const span = document.createElement('span');
+                span.className = 'reaction-float';
+                span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                span.style.left = (10 + Math.random() * 80) + '%';
+                span.style.bottom = '0';
+                span.style.animationDuration = (2 + Math.random() * 2) + 's';
+                stage.appendChild(span);
+                setTimeout(() => span.remove(), 4000);
+                i++;
+            }, 200);
+        }
+
+        // ===== HOUR CHART =====
+        function buildHourChart() {
+            const c = document.getElementById('hour-chart');
+            if (c.children.length > 0) { animateHBars(); return; }
+            const data = [12322, 14387, 12555, 6246, 3012, 712, 11, 55, 122, 247, 461, 678, 892, 1105, 1340, 1623, 1890, 2234, 2678, 3456, 4789, 5890, 7123, 8234];
+            const mx = Math.max(...data);
+            data.forEach((v, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'h-bar';
+                bar.dataset.h = (v / mx * 100) + '%';
+                const intensity = v / mx;
+                if (intensity > 0.7) bar.style.background = 'linear-gradient(to top, var(--pink), var(--rai))';
+                else if (intensity > 0.4) bar.style.background = 'linear-gradient(to top, var(--alex), var(--pink))';
+                else if (intensity > 0.15) bar.style.background = 'rgba(91,141,239,0.4)';
+                else bar.style.background = 'rgba(91,141,239,0.15)';
+                c.appendChild(bar);
+            });
+            setTimeout(animateHBars, 300);
+        }
+        function animateHBars() {
+            document.querySelectorAll('#hour-chart .h-bar').forEach((b, i) => {
+                setTimeout(() => b.style.height = b.dataset.h, i * 35);
+            });
+        }
+
+        // ===== DAY CHART =====
+        function buildDayChart() {
+            const c = document.getElementById('day-chart');
+            if (c.children.length > 0) { animateDBars(); return; }
+            const days = [
+                { l: 'Seg', v: 9041, color: 'var(--alex)' }, { l: 'Ter', v: 10123, color: 'var(--alex)' },
+                { l: 'Qua', v: 10505, color: 'var(--pink)' }, { l: 'Qui', v: 11268, color: 'var(--pink)' },
+                { l: 'Sex', v: 11061, color: 'var(--pink)' }, { l: 'Sáb', v: 12300, color: 'var(--rai)' },
+                { l: 'Dom', v: 11000, color: 'linear-gradient(90deg,var(--pink),var(--rai))' }
+            ];
+            const mx = Math.max(...days.map(d => d.v));
+            days.forEach(d => {
+                const row = document.createElement('div');
+                row.className = 'day-row';
+                row.innerHTML = `<div class="d-label">${d.l}</div><div class="d-track"><div class="d-fill" data-w="${(d.v / mx * 100)}%" style="background:${d.color};">${d.v.toLocaleString('pt-BR')}</div></div>`;
+                c.appendChild(row);
+            });
+            setTimeout(animateDBars, 300);
+        }
+        function animateDBars() {
+            document.querySelectorAll('#day-chart .d-fill').forEach((f, i) => {
+                setTimeout(() => f.style.width = f.dataset.w, i * 100);
+            });
+        }
+
+        // ===== WORD REVEAL =====
+        function triggerWordReveal() {
+            const slots = document.querySelectorAll('#word-reveal .word-slot');
+            slots.forEach(s => s.classList.remove('show'));
+            // Reveal from 5 to 1
+            const order = [0, 1, 2, 3, 4]; // #5, #4, #3, #2, #1
+            order.forEach((idx, i) => {
+                setTimeout(() => slots[idx].classList.add('show'), i * 600 + 300);
+            });
+
+            // After top 5, show extra grid
+            setTimeout(() => {
+                const grid = document.getElementById('word-grid-extra');
+                if (grid.children.length > 0) {
+                    grid.querySelectorAll('.w-pill').forEach((p, i) => {
+                        p.classList.remove('show');
+                        setTimeout(() => p.classList.add('show'), i * 80);
+                    });
+                    return;
+                }
+                const extra = [
+                    { w: 'gente', c: 478 }, { w: 'gosto', c: 462 }, { w: 'ksksksks', c: 448 },
+                    { w: 'queria', c: 425 }, { w: 'falando', c: 399 }, { w: 'noite', c: 370 },
+                    { w: 'achei', c: 367 }, { w: 'lembro', c: 363 }, { w: 'música', c: 310 },
+                    { w: 'parece', c: 306 }
+                ];
+                extra.forEach((x, i) => {
+                    const pill = document.createElement('div');
+                    pill.className = 'w-pill';
+                    pill.innerHTML = `${x.w} <span class="t-mono" style="font-size:0.6rem;color:var(--text-dim);margin-left:4px;">${x.c}</span>`;
+                    grid.appendChild(pill);
+                    setTimeout(() => pill.classList.add('show'), i * 80 + 3500);
+                });
+            }, 3200);
+        }
+
+        // ===== HEARTS RAIN =====
+        function startHearts() {
+            const c = document.getElementById('hearts-rain');
+            c.innerHTML = '';
+            const emojis = ['❤️', '💛', '💜', '💙', '✨', '🌙', '💗'];
+            for (let i = 0; i < 20; i++) {
+                const h = document.createElement('span');
+                h.style.cssText = `position:absolute;font-size:${0.8 + Math.random()}rem;left:${Math.random() * 100}%;animation:heart-fall ${3 + Math.random() * 3}s ease-in ${Math.random() * 4}s infinite;`;
+                h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                c.appendChild(h);
+            }
+        }
+
+        // ===== HEART FALL KEYFRAME (injected) =====
+        const style = document.createElement('style');
+        style.textContent = `@keyframes heart-fall{0%{transform:translateY(-20px) rotate(0);opacity:0;}10%{opacity:0.7;}100%{transform:translateY(100vh) rotate(360deg);opacity:0;}}`;
+        document.head.appendChild(style);
+
+        // ===== PWA =====
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => { });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = 'block';
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    document.getElementById('install-btn').style.display = 'none';
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        // ===== INIT =====
+        updateProgress();
+        triggerAnims(stories[0]);
+    </script>
+</body>
+
+</html>

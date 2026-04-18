@@ -1,0 +1,9 @@
+# Pastas com dados sensíveis e históricos da conversa bruta do Instagram
+rainara_*/
+*.json
+!manifest.json
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+*.swp
